@@ -45,6 +45,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1 # Use your actual region
 
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: maven
+      
+     
+
       # 2. Build your JAR (assuming Maven/Gradle)
       - name: Build JAR
         run: mvn clean package # Or ./gradlew build
