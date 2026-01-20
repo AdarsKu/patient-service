@@ -37,13 +37,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 1. Authenticate with AWS (using your access keys)
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1 # Use your actual region
+      #unnecessory i have given ssh
+      # # 1. Authenticate with AWS (using your access keys)
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: us-east-1 # Use your actual region
 
 
       - name: Set up Java 21
@@ -58,23 +59,31 @@ jobs:
       # 2. Build your JAR (assuming Maven/Gradle)
       - name: Build JAR
         run: mvn clean package # Or ./gradlew build
+# 4
+      - name: Rename JAR
+        run: mv target/*.jar target/patient-service.jar
 
-      # 3. Deploy to EC2 via SSH
-      - name: Deploy to EC2
+      
+      - name: Copy JAR to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "target/patient-service.jar"
+          target: "/home/ec2-user/app"
+
+
+      - name: Restart patient-service
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
+          username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Example commands to run on your EC2
-            mkdir -p /home/${{ secrets.EC2_USER }}/app
-            # You might use 'scp' or 'rsync' to move files if not using a runner
-            # Below is a simple restart command if the JAR is already moved
-            sudo systemctl restart my-java-app.service
+            sudo systemctl restart patient-service
 
-
-
+      
 
 # name: Deploy to Amazon ECS
 
