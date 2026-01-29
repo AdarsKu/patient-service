@@ -1,5 +1,6 @@
 package com.service.patient.service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -9,20 +10,15 @@ import com.service.patient.dto.PatientRequestDTO;
 import com.service.patient.dto.PatientResponseDTO;
 import com.service.patient.exception.EmailAlreadyExistException;
 import com.service.patient.exception.PatientNotFoundException;
-import com.service.patient.grpc.BillingServiceGrpcClient;
 import com.service.patient.mapper.PatientMapper;
 import com.service.patient.repo.PatientRepo;
 
 @Service
 public class PatientService {
-	
-	private final PatientRepo patientRepo;
-	private final BillingServiceGrpcClient grpcClient;
+	private PatientRepo patientRepo;
 
-	public PatientService(PatientRepo patientRepo, BillingServiceGrpcClient grpcClient) {
-		super();
+	public PatientService(PatientRepo patientRepo) {
 		this.patientRepo = patientRepo;
-		this.grpcClient = grpcClient;
 	}
 
 	// using dto with mapper
@@ -37,8 +33,6 @@ public class PatientService {
 			throw new EmailAlreadyExistException("A patient with tis email already exist " + req.getEmail());
 		}
 		var savePat = patientRepo.save(PatientMapper.toEntity(req));
-		// grpc call 
-		grpcClient.createBillingAccount(savePat.getId().toString(), savePat.getName(), savePat.getEmail());
 		return PatientMapper.toDto(savePat);
 	}
 
